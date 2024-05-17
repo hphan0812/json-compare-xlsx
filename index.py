@@ -4,6 +4,27 @@ import numpy as np
 import os 
 
 def get_mask_and_vis(image_path, label_file_path):
+    """
+    Get the mask and visualize the image.
+
+    This function takes in the path of an image and the path of a label file. 
+    
+    It reads the image using OpenCV and loads the label data from the JSON file. 
+    
+    It then creates a mask based on the contours in the label data and draws the contours on the image. 
+    
+    The function returns the mask and the modified image.
+
+    Args:
+        image_path (str): The path of the image file.
+        label_file_path (str): The path of the label file.
+
+    Returns:
+        tuple: A tuple containing the mask (numpy.ndarray) and the modified image (numpy.ndarray).
+            - The mask is a binary image with the same dimensions as the input image. 
+              It represents the areas covered by the contours.
+            - The modified image is the input image with the contours drawn on it.
+    """
     try:
         defect_img = cv2.imread(image_path)
         with open(label_file_path, 'r') as file:
