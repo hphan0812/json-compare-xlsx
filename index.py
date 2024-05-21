@@ -1,7 +1,8 @@
 import cv2
 import json
 import numpy as np
-import os 
+import os
+
 
 def get_mask_and_vis(image_path, label_file_path):
     """
@@ -41,6 +42,7 @@ def get_mask_and_vis(image_path, label_file_path):
         return mask, defect_img
     except:
         return None, None
+    
 if __name__=="__main__":
     defect_img_path="" #Image's path
     defect_label_path="" #Label's path
