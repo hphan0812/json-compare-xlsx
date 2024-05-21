@@ -27,42 +27,58 @@ def filter_images(img_folder):
     return ok_images_list, ng_images_list
 
 
-def compare_image_folders(folders):
+def compare_image_folders(folder1, folder2):
     """
-    Compare the images in the given folders and generate a comparison result in an Excel file.
+    Compare two folders containing images and create a result table of their differences.
 
     Parameters:
-    folders (list): A list of folder paths containing the images to be compared.
+        folder1 (str): The path to folder 1 containing images.
+        folder2 (str): The path to folder 2 containing images.
+
     """
     data = []
     
-    for folder in folders:
-        if not os.path.isdir(folder):
-            print(f"Directory does not exist: {folder}")
-            continue
+    # Get the parent folder names to use as column headers
+    folder1_name = os.path.basename(os.path.normpath(folder1))
+    folder2_name = os.path.basename(os.path.normpath(folder2))
+    
+    # Get the list of subfolders in folder1 and folder2
+    subfolders1 = sorted([d for d in os.listdir(folder1) if os.path.isdir(os.path.join(folder1, d))])
+    subfolders2 = sorted([d for d in os.listdir(folder2) if os.path.isdir(os.path.join(folder2, d))])
 
-        ok_images, ng_images = filter_images(folder)
+    common_subfolders = set(subfolders1).intersection(set(subfolders2))
+    
+    for subfolder in common_subfolders:
+        path1 = os.path.join(folder1, subfolder)
+        path2 = os.path.join(folder2, subfolder)
         
-        for file in ok_images + ng_images:
-            status = "ng" if file in ng_images else "ok"
-            data.append([file, folder, status])
+        files1 = sorted(os.listdir(path1))
+        files2 = sorted(os.listdir(path2))
+        
+        all_files = set(files1).union(set(files2))
+        
+        for file in all_files:
+            status1 = "ng" if file in files1 else "ok"
+            status2 = "ng" if file in files2 else "ok"
+            
+            if status1 != status2:
+                data.append([file, status1, folder1_name])
+                data.append([file, status2, folder2_name])
     
-    df = pd.DataFrame(data, columns=["Image", "Folder", "Status"])
-    
-    # Pivot the DataFrame to have folders as columns and fill missing values with "Missing"
+    # Convert data to DataFrame and pivot
+    df = pd.DataFrame(data, columns=["Image", "Status", "Folder"])
     df_pivot = df.pivot(index="Image", columns="Folder", values="Status").fillna("Missing")
     
-    # Add a "Result" column that shows "Match" if all statuses are the same, "Conflict" otherwise
+    # Add a "Result" column to determine "Conflict"
     df_pivot["Result"] = df_pivot.apply(lambda row: "Conflict" if len(set(row)) > 1 else "", axis=1)
     
-    # Filter the DataFrame to keep only rows with "Conflict" in the "Result" column
+    # Filter rows with "Conflict" in the "Result" column
     df_pivot_conflict = df_pivot[df_pivot["Result"] == "Conflict"]
     
-    df_pivot_conflict.to_excel("comparison_result.xlsx")
-    
+    # Export DataFrame to Excel file
+    df_pivot_conflict.to_excel("comparison_result.xlsx", sheet_name="Conflict_Results")
+
 if __name__=="__main__":
-    folder1 = os.path.abspath("Label")
-    folder2 = os.path.abspath("Label_2")
-    folder3 = os.path.abspath("Label_3")
-    folders = [folder1, folder2, folder3]
-    compare_image_folders(folders)
+    folder1 = os.path.abspath("Labelled_Hanh")
+    folder2 = os.path.abspath("Labelled_Minh")
+    compare_image_folders(folder1, folder2)
